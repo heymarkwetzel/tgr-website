@@ -306,7 +306,6 @@ a   { text-decoration: none; color: inherit; }
   border-bottom: 3px solid var(--yellow);
 }
 
-
 /* ============================================================
    SITE WRAPPER  — full-width, no max cap
 ============================================================ */
@@ -1579,8 +1578,8 @@ a   { text-decoration: none; color: inherit; }
 }
 
 .marquee__icon img {
-  width: 64px;
-  height: 64px;
+  width: 32px;
+  height: 32px;
   display: block;
   object-fit: contain;
 }
@@ -1792,12 +1791,13 @@ a   { text-decoration: none; color: inherit; }
   .footer           { padding: 40px; }
 }
 
-/* ---- Tablet Portrait ≤ 1100px ---- */
-@media (max-width: 1100px) {
+/* ---- Tablet Portrait ≤ 768px ---- */
+@media (max-width: 768px) {
 
-  /* Nav — hide links, keep CTA button */
-  .nav__links     { display: none; }
-  .nav__inner     { padding: 0 24px; }
+  /* Nav — hide links, keep logo + CTA */
+  .nav__links   { display: none; }
+  .nav__inner   { padding: 0 16px; }
+  .nav__subscribe { padding: 8px 16px; font-size: 14px; }
 
   /* Hero — image on top, copy below on mobile */
   .hero                  { flex-direction: column; }
