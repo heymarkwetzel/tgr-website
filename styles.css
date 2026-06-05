@@ -1549,9 +1549,7 @@ a   { text-decoration: none; color: inherit; }
   animation: marquee-scroll 22s linear infinite;
 }
 
-.marquee__track:hover {
-  animation-play-state: paused;
-}
+
 
 @keyframes marquee-scroll {
   0%   { transform: translateX(0); }
@@ -1578,8 +1576,8 @@ a   { text-decoration: none; color: inherit; }
 }
 
 .marquee__icon img {
-  width: 32px;
-  height: 32px;
+  width: 64px;
+  height: 64px;
   display: block;
   object-fit: contain;
 }
