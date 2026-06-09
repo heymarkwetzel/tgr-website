@@ -24,9 +24,33 @@
         <li><a href="#gallery" class="nav__link">Gallery</a></li>
         <li><a href="#footer" class="nav__link">Resources</a></li>
       </ul>
+      <div class="nav__actions">
       <a href="https://diy-your-quiz.vercel.app/q/generosity-archetype" target="_blank" rel="noopener" class="btn btn--primary">Take the Quiz</a>
+      <button class="btn btn--primary cart-btn" id="cartBtn" aria-label="Open cart">
+        <img src="images/Utility Icons/E/cart.svg" class="cart-btn__icon" alt="" aria-hidden="true">
+        <span class="cart-btn__count" id="cartBadge" aria-live="polite"></span>
+      </button>
+      </div>
     </div>
   </nav>
+
+  <!-- Cart overlay -->
+  <div class="cart-overlay" id="cartOverlay" aria-hidden="true"></div>
+
+  <!-- Cart drawer -->
+  <aside class="cart-drawer" id="cartDrawer" aria-label="Shopping cart" aria-hidden="true">
+    <!-- Header -->
+    <div class="cart-drawer__header">
+      <h2 class="cart-drawer__title">Your Cart</h2>
+      <button class="cart-drawer__close" id="cartClose" aria-label="Close cart">&#10005;</button>
+    </div>
+
+    <!-- Products list -->
+    <div class="cart-drawer__products" id="cartProducts"></div>
+
+    <!-- Subtotal + Checkout -->
+    <div class="cart-drawer__footer" id="cartFooter"></div>
+  </aside>
 
   <div class="site-wrapper">
 
@@ -42,7 +66,7 @@
           </div>
           <div class="hero__cta-group">
             <p class="hero__body">The educational gaming system includes all game cards, all player guides, access to all new guides as they come out, and a lifetime learning license.</p>
-            <a href="#" class="btn btn--primary">Buy Now • $500</a>
+            <button class="btn btn--primary" onclick="addToCart(1)">Add to Cart • $500</button>
           </div>
         </div>
       </div>
@@ -69,7 +93,7 @@
           <div class="product-card__info">
             <h3 class="product-card__name">Guest Pass</h3>
             <p class="product-card__edition">character cards &amp; player guides</p>
-            <a href="#" class="btn btn--primary product-card__cta">Shop • $50</a>
+            <button class="btn btn--primary product-card__cta" onclick="addToCart(2)">Add to Cart</button>
           </div>
         </div>
 
@@ -83,7 +107,7 @@
           <div class="product-card__info">
             <h3 class="product-card__name">5 Panel Hat</h3>
             <p class="product-card__edition">you look great!</p>
-            <a href="#" class="btn btn--primary product-card__cta">Shop • $16</a>
+            <button class="btn btn--primary product-card__cta" onclick="addToCart(3)">Add to Cart</button>
           </div>
         </div>
 
@@ -97,7 +121,7 @@
           <div class="product-card__info">
             <h3 class="product-card__name">Tote Bag</h3>
             <p class="product-card__edition">Great for snacks and more</p>
-            <a href="#" class="btn btn--primary product-card__cta">Shop • $22</a>
+            <button class="btn btn--primary product-card__cta" onclick="addToCart(4)">Add to Cart</button>
           </div>
         </div>
 
@@ -727,6 +751,153 @@
           setActive(link || null);
         }
       }, { passive: true });
+    })();
+  </script>
+
+  <!-- ============================================================
+       CART DRAWER
+  ============================================================ -->
+  <script>
+    (function () {
+      // ── State ────────────────────────────────────────────────
+      const PRODUCTS = [
+        { id: 1, name: 'The Generosity Roundtable', price: 500, img: 'images/fullGame1.png' },
+        { id: 2, name: 'Guest Pass',                price: 50,  img: 'images/guestPass1.png' },
+        { id: 3, name: '5 Panel Hat',               price: 16,  img: 'images/hat.png'        },
+        { id: 4, name: 'Tote Bag',                  price: 22,  img: 'images/tote.png'       },
+      ];
+
+      // cart = { [productId]: qty }
+      let cart = {};
+
+      // ── DOM refs ─────────────────────────────────────────────
+      const cartBtn      = document.getElementById('cartBtn');
+      const cartBadge    = document.getElementById('cartBadge');
+      const cartDrawer   = document.getElementById('cartDrawer');
+      const cartOverlay  = document.getElementById('cartOverlay');
+      const cartClose    = document.getElementById('cartClose');
+      const cartProducts = document.getElementById('cartProducts');
+      const cartFooter   = document.getElementById('cartFooter');
+
+      // ── Open / Close ─────────────────────────────────────────
+      function openCart() {
+        cartDrawer.classList.add('cart-drawer--open');
+        cartOverlay.classList.add('cart-overlay--open');
+        cartDrawer.setAttribute('aria-hidden', 'false');
+        cartOverlay.setAttribute('aria-hidden', 'false');
+        document.body.style.overflow = 'hidden';
+      }
+
+      function closeCart() {
+        cartDrawer.classList.remove('cart-drawer--open');
+        cartOverlay.classList.remove('cart-overlay--open');
+        cartDrawer.setAttribute('aria-hidden', 'true');
+        cartOverlay.setAttribute('aria-hidden', 'true');
+        document.body.style.overflow = '';
+      }
+
+      cartBtn.addEventListener('click', openCart);
+      cartClose.addEventListener('click', closeCart);
+      cartOverlay.addEventListener('click', closeCart);
+
+      // Close on Escape
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeCart();
+      });
+
+      // ── Render ───────────────────────────────────────────────
+      function render() {
+        const ids = Object.keys(cart).filter(id => cart[id] > 0);
+        const totalQty = ids.reduce((sum, id) => sum + cart[id], 0);
+        const totalPrice = ids.reduce((sum, id) => {
+          const p = PRODUCTS.find(pr => pr.id === +id);
+          return sum + (p ? p.price * cart[id] : 0);
+        }, 0);
+
+        // Count
+        if (totalQty > 0) {
+          cartBadge.textContent = totalQty;
+          cartBadge.classList.add('cart-btn__count--visible');
+        } else {
+          cartBadge.textContent = '';
+          cartBadge.classList.remove('cart-btn__count--visible');
+        }
+
+        // Products area
+        if (ids.length === 0) {
+          cartProducts.innerHTML = '<p class="cart-empty">Your cart is empty</p>';
+          cartFooter.innerHTML   = '';
+          return;
+        }
+
+        cartProducts.innerHTML = ids.map(id => {
+          const p   = PRODUCTS.find(pr => pr.id === +id);
+          const qty = cart[id];
+          return `
+            <div class="cart-product" data-id="${p.id}">
+              <div class="cart-product__img-wrap">
+                <img src="${p.img}" alt="${p.name}" loading="lazy">
+              </div>
+              <div class="cart-product__info">
+                <div class="cart-product__top">
+                  <span class="cart-product__name">${p.name}</span>
+                  <span class="cart-product__price">$${(p.price * qty).toLocaleString()}</span>
+                </div>
+                <div class="cart-product__controls">
+                  <div class="cart-product__qty">
+                    <button class="cart-product__qty-btn" data-action="dec" data-id="${p.id}" aria-label="Decrease quantity">&#8722;</button>
+                    <span class="cart-product__qty-num">${qty}</span>
+                    <button class="cart-product__qty-btn" data-action="inc" data-id="${p.id}" aria-label="Increase quantity">+</button>
+                  </div>
+                  <button class="cart-product__remove" data-action="remove" data-id="${p.id}">Remove</button>
+                </div>
+              </div>
+            </div>`;
+        }).join('');
+
+        // Footer
+        cartFooter.innerHTML = `
+          <div class="cart-subtotal">
+            <div class="cart-subtotal__row">
+              <span class="cart-subtotal__label">Subtotal</span>
+              <span class="cart-subtotal__total">$${totalPrice.toLocaleString()}</span>
+            </div>
+            <p class="cart-subtotal__note">Taxes and shipping calculated at checkout</p>
+          </div>
+          <button class="cart-checkout-btn">Checkout</button>`;
+      }
+
+      // ── Events: qty / remove (delegated) ─────────────────────
+      cartProducts.addEventListener('click', function (e) {
+        const btn = e.target.closest('[data-action]');
+        if (!btn) return;
+        const id     = +btn.dataset.id;
+        const action = btn.dataset.action;
+
+        if (action === 'inc') {
+          cart[id] = (cart[id] || 0) + 1;
+        } else if (action === 'dec') {
+          cart[id] = Math.max(0, (cart[id] || 0) - 1);
+          if (cart[id] === 0) delete cart[id];
+        } else if (action === 'remove') {
+          delete cart[id];
+        }
+        render();
+      });
+
+      // ── "Add to Cart" buttons in Swag section ────────────────
+      // Wire up the Swag section product cards if they have an add button.
+      // The function is exposed globally so swag cards can call it.
+      window.addToCart = function (productId) {
+        const p = PRODUCTS.find(pr => pr.id === productId);
+        if (!p) return;
+        cart[productId] = (cart[productId] || 0) + 1;
+        render();
+        openCart();
+      };
+
+      // Initial render (empty)
+      render();
     })();
   </script>
 
